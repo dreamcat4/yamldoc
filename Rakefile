@@ -4,12 +4,12 @@ require 'rake'
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
-    gem.name = "settingslogic"
+    gem.name = "dreamcat4-settingslogic"
     gem.summary = "A simple and straightforward settings solution that uses an ERB enabled YAML file and a singleton design pattern."
     gem.email = "bjohnson@binarylogic.com"
     gem.homepage = "http://github.com/binarylogic/settingslogic"
     gem.authors = ["Ben Johnson of Binary Logic"]
-    gem.rubyforge_project = "settingslogic"
+    gem.rubyforge_project = ""
   end
   Jeweler::RubyforgeTasks.new
 rescue LoadError
