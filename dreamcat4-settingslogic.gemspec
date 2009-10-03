@@ -4,12 +4,12 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{settingslogic}
-  s.version = "2.0.4"
+  s.name = %q{dreamcat4-settingslogic}
+  s.version = "2.0.5"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Ben Johnson of Binary Logic"]
-  s.date = %q{2009-09-30}
+  s.date = %q{2009-10-03}
   s.email = %q{bjohnson@binarylogic.com}
   s.extra_rdoc_files = [
     "LICENSE",
@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
      "init.rb",
      "lib/settingslogic.rb",
      "rails/init.rb",
-     "settingslogic.gemspec",
+     "dreamcat4-settingslogic.gemspec",
      "spec/settings.rb",
      "spec/settings.yml",
      "spec/settings2.rb",
@@ -35,7 +35,7 @@ Gem::Specification.new do |s|
   s.homepage = %q{http://github.com/binarylogic/settingslogic}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
-  s.rubyforge_project = %q{settingslogic}
+  s.rubyforge_project = %q{}
   s.rubygems_version = %q{1.3.4}
   s.summary = %q{A simple and straightforward settings solution that uses an ERB enabled YAML file and a singleton design pattern.}
   s.test_files = [
