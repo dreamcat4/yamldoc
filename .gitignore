@@ -1,4 +1,5 @@
 .DS_Store
+*.gem
 *.log
 *.sqlite3
 pkg/*
