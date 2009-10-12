@@ -1,1 +1,1 @@
-require "settingslogic"
+require "yamldoc"

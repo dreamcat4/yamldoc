@@ -4,11 +4,11 @@ require 'rake'
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
-    gem.name = "dreamcat4-settingslogic"
-    gem.summary = "A simple and straightforward settings solution that uses an ERB enabled YAML file and a singleton design pattern."
-    gem.email = "bjohnson@binarylogic.com"
-    gem.homepage = "http://github.com/binarylogic/settingslogic"
-    gem.authors = ["Ben Johnson of Binary Logic"]
+    gem.name = "yamldoc"
+    gem.summary = "A simple solution for ERB enabled YAML file."
+    gem.email = "dreamcat4@gmail.com"
+    gem.homepage = "http://github.com/dreamcat4/yamldoc"
+    gem.authors = ["dreamcat4, Ben Johnson"]
     gem.rubyforge_project = ""
   end
   Jeweler::RubyforgeTasks.new

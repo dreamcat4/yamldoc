@@ -1,6 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + "/spec_helper")
 
-describe "Settingslogic" do
+describe "YamlDoc" do
   it "should be a hash" do
     Settings.send(:instance).should be_is_a(Hash)
   end
