@@ -22,7 +22,6 @@ Gem::Specification.new do |s|
      "README.rdoc",
      "Rakefile",
      "VERSION.yml",
-     "dreamcat4-settingslogic-2.0.5.gem",
      "init.rb",
      "lib/clia.rb",
      "lib/yamldoc.rb",
