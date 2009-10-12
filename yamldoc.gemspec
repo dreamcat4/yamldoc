@@ -4,13 +4,13 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{dreamcat4-settingslogic}
-  s.version = "2.0.5"
+  s.name = %q{yamldoc}
+  s.version = "0.0.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Ben Johnson of Binary Logic"]
-  s.date = %q{2009-10-03}
-  s.email = %q{bjohnson@binarylogic.com}
+  s.authors = ["dreamcat4, Ben Johnson"]
+  s.date = %q{2009-10-12}
+  s.email = %q{dreamcat4@gmail.com}
   s.extra_rdoc_files = [
     "LICENSE",
      "README.rdoc"
@@ -22,27 +22,31 @@ Gem::Specification.new do |s|
      "README.rdoc",
      "Rakefile",
      "VERSION.yml",
+     "dreamcat4-settingslogic-2.0.5.gem",
      "init.rb",
-     "lib/settingslogic.rb",
+     "lib/clia.rb",
+     "lib/yamldoc.rb",
      "rails/init.rb",
-     "dreamcat4-settingslogic.gemspec",
+     "spec/new.rb",
      "spec/settings.rb",
      "spec/settings.yml",
      "spec/settings2.rb",
-     "spec/settingslogic_spec.rb",
-     "spec/spec_helper.rb"
+     "spec/spec_helper.rb",
+     "spec/yamldoc_spec.rb",
+     "yamldoc.gemspec"
   ]
-  s.homepage = %q{http://github.com/binarylogic/settingslogic}
+  s.homepage = %q{http://github.com/dreamcat4/yamldoc}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubyforge_project = %q{}
   s.rubygems_version = %q{1.3.4}
-  s.summary = %q{A simple and straightforward settings solution that uses an ERB enabled YAML file and a singleton design pattern.}
+  s.summary = %q{A simple solution for ERB enabled YAML file.}
   s.test_files = [
-    "spec/settings.rb",
+    "spec/new.rb",
+     "spec/settings.rb",
      "spec/settings2.rb",
-     "spec/settingslogic_spec.rb",
-     "spec/spec_helper.rb"
+     "spec/spec_helper.rb",
+     "spec/yamldoc_spec.rb"
   ]
 
   if s.respond_to? :specification_version then
