@@ -1,79 +1,98 @@
-= Settingslogic
+= YamlDoc
 
-Settingslogic is a simple configuration / settings solution that uses an ERB enabled YAML file. It has been great for my apps, maybe you will enjoy it too.
+YamlDoc is a simple Yaml reader/writer solution that uses an ERB enabled YAML file. Yaml is represented as a Hash tree. Features include
 
-So here is my question to you.....is Settingslogic a great settings solution or the greatest?
+Autosave, object detection (modified in-place). Force uniform hash keys as String or Sym, dot notation for nested objects, and manual write for large files.
 
-== Helpful links
+== Install
 
-*	<b>Documentation:</b> http://rdoc.info/projects/binarylogic/settingslogic
-*	<b>Repository:</b> http://github.com/binarylogic/settingslogic/tree/master
-* <b>Issues:</b> http://github.com/binarylogic/settingslogic/issues
+Install from gemcutter:
 
-== Install and use
+  gem install yamldoc
 
-Install from rubyforge:
+== Quickstart
 
-  sudo gem install settingslogic
+There are various ways to create 
 
-Install from github:
-
-  sudo gem install binarylogic-settingslogic
-
-Or as a plugin
-
-  script/plugin install git://github.com/binarylogic/settingslogic.git
-
-== 1. Define your constant
-
-Instead of defining a Settings constant for you, that task is left to you. Simply create a class in your application that looks like:
-
-  class Settings < Settingslogic
-    source "#{Rails.root}/config/application.yml"
-    namespace Rails.env
+  class Settings < YamlDoc
+    filename = "file.yml"
+    autosave = true
+    ...
   end
+  file = Settings.new
 
-Name it Settings, name it Config, name it whatever you want. Add as many or as few as you like. A good place to put this file in a rails app is models/settings.rb
+Or
 
-I felt adding a settings file in your app was more straightforward, less tricky, and more flexible.
+  settings = YamlDoc.new("file.yml")
 
-== 2. Create your settings
+Or
 
-Notice above we specified an absolute path to our settings file called "application.yml". This is just a typical YAML file. Also notice above that we specified a namespace for our environment. This allows us to namespace our configuration depending on our environment:
+  settings = YamlDoc.new :filename => "file.yml", :autosave => true
 
-  # app/config/application.yml
-  defaults: &defaults
-    cool:
-      saweet: nested settings
-    neat_setting: 24
-    awesome_setting: <%= "Did you know 5 + 5 = " + (5 + 5) + "?" %>
-  
-  development:
-    <<: *defaults
-    neat_setting: 800
+== YmlDoc Methods
 
-  test:
-    <<: *defaults
+In most cases the `:save` method is all you will need.
 
-  production:
-    <<: *defaults
+  config.methods.inspect
+  => [:load, :save, :methods, :properties, :reload_hooks]
 
-== Access your settings
+`:load` will reload the existing file, or (with a parameter) merge the existing object  into the newly loaded file (and re-save it). So generally use `YamlDoc.new` to load a different file.
 
-  >> Rails.env.development?
-  => true
-  
-  >> Settings.cool
-  => "#<Settingslogic::Settings ... >"
-  
-  >> Settings.cool.saweet
-  => "nested settings"
-  
-  >> Settings.neat_setting
-  => 800
-  
-  >> Settings.awesome_setting
-  => "Did you know 5 + 5 = 10?"
+== YmlDoc Properties
 
+  YamlDoc.defaults.inspect
+  => {:ymldoc_pfx=>"", :deep_clone=>false, :force_keys=>false, :key_type=>String, :autosave=>false, :object_detection=>false, :filename=>nil}
 
+== AutoYamlDoc Class
+
+Of course it's tempting to just turn everything on for easy access to yml settings file. So we've gone ahead and created an "everythin on" class.
+
+  AutoYamlDoc.defaults.inspect
+  => {:ymldoc_pfx=>"", :deep_clone=>false, :force_keys=>true, :key_type=>String, :autosave=>true, :object_detection=>true, :filename=>nil}
+
+  AutoYmlDoc.new("settings.yml")
+
+== Object Manipulation
+
+The deserialized Yaml object just a special kind of nested hash.
+
+  settings.a = "Somestring"
+  settings.b = [:label1,:label2,:label3]
+  settings.b[1].inspect
+  => :label2
+
+  settings.defaults.d = { "key1" => "val1", ... }
+  settings.defaults.key1
+  => "val1"
+
+  other_hash = { "key1" => 5 }
+  settings.merge! other_hash
+  settings.key1
+  => 5
+
+== Advanced yamldoc methods and properties
+
+  config.methods.inspect
+  => [:load, :save, :methods, :properties, :reload_hooks]
+
+You can rename the standard YmlDoc methods by setting the :ymldoc_pfx property. This is useful should any namespace clashes occur at the root (topmost) level of your yaml file. For example if we encountered a yaml file which has topmost nodes `save` and `:filename`. These are part of the YamlDoc API methods. So we use a `:ymldoc_pfx` to rename the YmlDoc object methods to something else. For example:
+
+  config.properties.inspect
+  => [:object_detection, :root_obj, :ymldoc_pfx, :force_keys, :deep_clone, :detection_hooks, :key_type, :autosave, :filename]
+
+  config.ymldoc_pfx = "yml_"
+  config.reload_hooks
+  config.yml_methods.inspect
+  => [:yml_load, :yml_save, :yml_methods, :yml_properties, :yml_reload_hooks]
+
+  config.save = "somestring"
+  config.save
+  => "somestring"
+
+  config.yml_save()
+  # file saved.
+
+== Copyright, License
+
+Copyright (c) 2009 dreamcat4
 Copyright (c) 2008 {Ben Johnson}[http://github.com/binarylogic] of {Binary Logic}[http://www.binarylogic.com], released under the MIT license 
