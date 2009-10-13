@@ -3,12 +3,12 @@ require "erb"
 require "clia"
 
 class Object
-  def to_yaml_properties; instance_variables - ["@_","@_sh","@_as"]; end
+  def to_yaml_properties; instance_variables - ["@_","@_ro","@_yp","@_ym","@_as"]; end
   def deep_clone; Marshal::load(Marshal.dump(self)); end
 end
 
 class YamlDoc < Hash
-private
+  private
   inheritable_attributes :_
 
   @_ = \
@@ -16,55 +16,19 @@ private
       :filename => nil,
       :key_type => String,
       :force_keys => false,
-      :detection_hooks => false,
+      :object_detection => false,
       :autosave => false,
       :deep_clone => false,
-      :hook_pfx => ""
+      :ymldoc_pfx => ""
     }
 
   def self.defaults
     return @_
   end
 
-  def save(&block)
-    # always disable autosave for effecient write
-    @_as = @_[:autosave] ; @_[:autosave] = false
-    _call_block(block) if block_given?
-    @_[:autosave] = @_as ; _write_file
-  end
-  
-  def hooks
-    @_sh
-  end
-  
-  def reload_hooks
-    pfx = @_[:hook_pfx].to_s
-
-    old_hooks = @_sh || [] ; @_sh = []
-    old_hooks.each do |sym|
-      self.class.send(:remove_method,sym)
-    end
-
-    @_.keys.each do |sym|
-      getter = (pfx+sym.to_s).to_sym
-      self.class.send(:define_method, getter) { @_[sym] }
-      @_sh << getter
-
-      setter = (pfx+sym.to_s+"=").to_sym
-      self.class.send(:define_method, setter) { |val| @_[sym] = val }
-    end
-    
-    [:save, :hooks, :reload_hooks].each do |sym|
-      public_method = (pfx+sym.to_s).to_sym
-      self.class.send(:define_method, public_method, self.method(sym))
-      @_sh << public_method
-    end
-    
-  end
-
   def initialize(*args, &block)
     @_ = self.class.defaults
-    @_[:root_obj] = self
+    @_ro = self
     self.send(:reload_hooks)
 
     case args.first
@@ -81,16 +45,39 @@ private
         end
     end
     
-    if File.exists? @_[:filename]
-      yaml = YAML.load(ERB.new(File.read(@_[:filename])).result)
-      hash = yaml.to_hash if yaml
-    end
-
-    hash = Hash.new if hash.nil?
-    self.merge! hash
+    load()
     save(&block) if block_given?
   end
 
+  def methods
+    @_ym
+  end
+  
+  def properties
+    @_yp
+  end
+  
+  def load(file=nil)
+    f = file || @_[:filename]
+    if f
+      if File.exists? f
+        yaml = YAML.load(ERB.new(File.read(f)).result)
+        hash = yaml.to_hash if yaml
+        puts yaml if yaml
+      end
+
+      hash = Hash.new if hash.nil?
+      self.merge! hash
+      @_[:filename] = f
+    end
+  end
+
+  def save(&block)
+    # always disable autosave for effecient write
+    @_as = @_[:autosave] ; @_[:autosave] = false
+    _call_block(block) if block_given?
+    @_[:autosave] = @_as ; _write_file
+  end
 
   def _call_block(block)
     # puts "block"
@@ -99,6 +86,40 @@ private
     else
       raise "Wrong number of arguments (#{block.arity}). This block takes 1 argument"
     end
+  end
+
+  def class_hooks
+    # define accessors to @_ for the class
+  end
+
+  def reload_hooks
+    pfx = @_[:ymldoc_pfx].to_s
+
+    old_props = @_yp || [] ; @_yp = []
+    old_props.each do |sym|
+      self.class.send(:remove_method,sym)
+    end
+
+    @_.keys.each do |sym|
+      getter = (pfx+sym.to_s).to_sym
+      self.class.send(:define_method, getter) { @_[sym] }
+      @_yp << getter
+
+      setter = (pfx+sym.to_s+"=").to_sym
+      self.class.send(:define_method, setter) { |val| @_[sym] = val }
+    end
+    
+    old_methods = @_ym || [] ; @_ym = []
+    old_methods.each do |sym|
+      self.class.send(:remove_method,sym)
+    end
+
+    [:load, :save, :methods, :properties, :reload_hooks].each do |sym|
+      m = (pfx+sym.to_s).to_sym
+      self.class.send(:define_method, m, self.method(sym))
+      @_ym << m
+    end
+    
   end
 
   module HashChanged
@@ -200,7 +221,9 @@ private
           value.extend(EigenMethodDefiner)
           parent_opts = @_
           value.instance_eval { @_ = parent_opts }
-          value.extend YamlDoc::ChangedHook if @_[:detection_hooks]
+          root_obj = @_ro
+          value.instance_eval { @_ro = root_obj }
+          value.extend YamlDoc::ChangedHook if @_[:object_detection]
           value.extend(HashMethods) if value.is_a?(Hash)
           break
         end
@@ -215,7 +238,7 @@ private
     def _write_file
       if @_[:filename]
         File.open(@_[:filename], 'w') do |output|
-          output.puts YAML.dump(@_[:root_obj])
+          output.puts YAML.dump(@_ro)
         end
       end
     end
@@ -234,5 +257,18 @@ private
 
   include EigenMethodDefiner
 end
+
+class AutoYamlDoc < YamlDoc
+  force_keys = false
+  object_detection = true
+  _[:object_detection] = true
+  autosave = true  
+  # puts "force_keys=#{self.force_keys}"
+  # puts "object_detection=#{self.object_detection}"
+  # puts "autosave=#{self.autosave}"
+  
+end
+
+
 
 
