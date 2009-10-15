@@ -15,8 +15,8 @@ Install from gemcutter:
 There are various ways to create 
 
   class Settings < YamlDoc
-    filename = "file.yml"
-    autosave = true
+    self.filename = "file.yml"
+    self.autosave = true
     ...
   end
   file = Settings.new
