@@ -2,6 +2,31 @@ require 'rubygems'
 require 'rake'
 
 begin
+  # hanna_dir = '/Users/mislav/Projects/Hanna/lib'
+  hanna_dir = "/Users/id/.gem/ruby/active/gems/mislav-hanna-0.1.11/lib"
+  $:.unshift hanna_dir if File.exists? hanna_dir
+  require 'hanna/rdoctask'
+rescue LoadError
+  puts "*** Load hanna/rdoctask failed. ***"
+  require 'rake'
+  require 'rake/rdoctask'
+end
+
+desc 'Generate RDoc documentation for YamlDoc.'
+Rake::RDocTask.new(:rdoc) do |rdoc|
+  rdoc.rdoc_files.include('README.rdoc', 'LICENSE', 'CHANGELOG.rdoc').
+    include('lib/**/*.rb').
+    exclude('lib/class_attributes.rb')
+
+  rdoc.main = "README.rdoc" # page to start on
+  rdoc.title = "yamldoc documentation"
+
+  rdoc.rdoc_dir = 'doc' # rdoc output folder
+  rdoc.options << '--inline-source' << '--charset=UTF-8'
+  rdoc.options << '--webcvs=http://github.com/dreamcat4/yamldoc/tree/master/'
+end
+
+begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "yamldoc"
