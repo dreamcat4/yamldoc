@@ -1,6 +1,6 @@
 require "yaml"
 require "erb"
-require "clia"
+require "class_attributes"
 
 class Object
   def to_yaml_properties; instance_variables - ["@_","@_ro","@_yp","@_ym","@_as"]; end
@@ -9,25 +9,31 @@ end
 
 class YamlDoc < Hash
   private
-  inheritable_attributes :_
+  has_class_object_attributes; co_attr_i :_
 
-  @_ = \
-    {
-      :filename => nil,
-      :key_type => String,
-      :force_keys => false,
-      :object_detection => false,
-      :autosave => false,
-      :deep_clone => false,
-      :ymldoc_pfx => ""
-    }
+  @_ = {  
+    :filename => nil,
+    :key_type => String,
+    :force_keys => false,
+    :object_detection => false,
+    :autosave => false,
+    :deep_clone => false,
+    :ymldoc_pfx => ""
+  }
 
-  def self.defaults
-    return @_
+  def self.properties ; @_ ; end
+
+  def self.inherit(*args, &block)
+    # define class accessors for @_ (properties)
+    @_.keys.each do |sym|
+      getter = sym
+      self.class.send(:define_method, getter) { @_[sym] }    
+      setter = (sym.to_s+"=").to_sym
+      self.class.send(:define_method, setter) { |val| @_[sym] = val }
+    end    
   end
 
   def initialize(*args, &block)
-    @_ = self.class.defaults
     @_ro = self
     self.send(:reload_hooks)
 
@@ -49,14 +55,6 @@ class YamlDoc < Hash
     save(&block) if block_given?
   end
 
-  def methods
-    @_ym
-  end
-  
-  def properties
-    @_yp
-  end
-  
   def load(file=nil)
     f = file || @_[:filename]
     if f
@@ -80,7 +78,6 @@ class YamlDoc < Hash
   end
 
   def _call_block(block)
-    # puts "block"
     if block.arity == 1
       block.call(self)
     else
@@ -88,9 +85,9 @@ class YamlDoc < Hash
     end
   end
 
-  def class_hooks
-    # define accessors to @_ for the class
-  end
+  def properties ; @_ ; end
+
+  def methods ; @_ym ; end
 
   def reload_hooks
     pfx = @_[:ymldoc_pfx].to_s
@@ -119,7 +116,6 @@ class YamlDoc < Hash
       self.class.send(:define_method, m, self.method(sym))
       @_ym << m
     end
-    
   end
 
   module HashChanged
@@ -259,16 +255,10 @@ class YamlDoc < Hash
 end
 
 class AutoYamlDoc < YamlDoc
-  force_keys = false
-  object_detection = true
-  _[:object_detection] = true
-  autosave = true  
-  # puts "force_keys=#{self.force_keys}"
-  # puts "object_detection=#{self.object_detection}"
-  # puts "autosave=#{self.autosave}"
-  
+    self.force_keys = true
+    self.object_detection = true
+    self.autosave = true  
 end
-
 
 
 
