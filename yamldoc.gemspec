@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["dreamcat4, Ben Johnson"]
-  s.date = %q{2009-10-13}
+  s.date = %q{2009-10-15}
   s.email = %q{dreamcat4@gmail.com}
   s.extra_rdoc_files = [
     "LICENSE",
@@ -23,10 +23,10 @@ Gem::Specification.new do |s|
      "Rakefile",
      "VERSION.yml",
      "init.rb",
-     "lib/clia.rb",
+     "lib/class_attributes.rb",
      "lib/yamldoc.rb",
      "rails/init.rb",
-     "spec/new.rb",
+     "spec/examples_unsorted.rb",
      "spec/settings.rb",
      "spec/settings.yml",
      "spec/settings2.rb",
@@ -41,7 +41,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.4}
   s.summary = %q{A simple solution for ERB enabled YAML file.}
   s.test_files = [
-    "spec/new.rb",
+    "spec/examples_unsorted.rb",
      "spec/settings.rb",
      "spec/settings2.rb",
      "spec/spec_helper.rb",
