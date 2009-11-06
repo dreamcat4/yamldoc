@@ -3,7 +3,11 @@ require "erb"
 require "class_attributes"
 
 class Object
-  def to_yaml_properties; instance_variables - ["@_","@_ro","@_yp","@_ym","@_as"]; end
+  if RUBY_VERSION >= '1.9'
+    def to_yaml_properties; instance_variables - [:@_,:@_ro,:@_yp,:@_ym,:@_as]; end
+  else
+    def to_yaml_properties; instance_variables - ["@_","@_ro","@_yp","@_ym"]; end
+  end
   def deep_clone; Marshal::load(Marshal.dump(self)); end
 end
 
@@ -34,6 +38,7 @@ class YamlDoc < Hash
   end
 
   def initialize(*args, &block)
+
     @_ro = self
     self.send(:reload_hooks)
 
@@ -55,13 +60,17 @@ class YamlDoc < Hash
     save(&block) if block_given?
   end
 
+  def inspect
+    YAML.dump self
+  end
+
   def load(file=nil)
     f = file || @_[:filename]
     if f
       if File.exists? f
-        yaml = YAML.load(ERB.new(File.read(f)).result)
+        # yaml = YAML.load(ERB.new(File.read(f)).result)
+        yaml = YAML.load(File.read(f))
         hash = yaml.to_hash if yaml
-        puts yaml if yaml
       end
 
       hash = Hash.new if hash.nil?
@@ -70,7 +79,8 @@ class YamlDoc < Hash
     end
   end
 
-  def save(&block)
+  def save(file=nil,&block)
+    @_[:filename] &&= file
     # always disable autosave for effecient write
     @_as = @_[:autosave] ; @_[:autosave] = false
     _call_block(block) if block_given?
@@ -79,6 +89,7 @@ class YamlDoc < Hash
 
   def _call_block(block)
     if block.arity == 1
+      # puts "block=#{block}"
       block.call(self)
     else
       raise "Wrong number of arguments (#{block.arity}). This block takes 1 argument"
@@ -111,7 +122,7 @@ class YamlDoc < Hash
       self.class.send(:remove_method,sym)
     end
 
-    [:load, :save, :methods, :properties, :reload_hooks].each do |sym|
+    [:inspect, :load, :save, :methods, :properties, :reload_hooks].each do |sym|
       m = (pfx+sym.to_s).to_sym
       self.class.send(:define_method, m, self.method(sym))
       @_ym << m
@@ -141,7 +152,7 @@ class YamlDoc < Hash
   end
   module ObjectChanged
     def self.object_changed_methods(obj)
-      obj.instance_variables.map { |s| s.delete("@")+"=" }
+      obj.instance_variables.map { |s| s.to_s.delete("@")+"=" }
     end
   end
   module ChangedHook
@@ -149,17 +160,34 @@ class YamlDoc < Hash
       override_obj_changed_methods base
     end
     private
-    def self.override_obj_changed_methods(obj)
-      eigen_class = self
-      obj_class = obj.class.to_s.match("Hash|Array|String") || "Object"
-      m = eval "#{obj_class}Changed::object_changed_methods obj"
-      m.each do |method|
-        eigen_class.send(:define_method, method) { 
-          result = super
-          # eval "puts \"__obj_changed_hook #{method}\""
-          __obj_changed_hook
-          return result
+
+    if RUBY_VERSION >= '1.9'
+      def self.override_obj_changed_methods(obj)
+        eigen_class = self
+        obj_class = obj.class.to_s.match("Hash|Array|String") || "Object"
+        m = eval "#{obj_class}Changed::object_changed_methods obj"
+        m.each do |method|
+          eigen_class.send(:define_method, method) { |*args, &block|
+            result = super(*args,&block)
+            # eval "puts \"__obj_changed_hook #{method}\""
+            __obj_changed_hook
+            return result
           }
+        end
+      end
+    else
+      def self.override_obj_changed_methods(obj)
+        eigen_class = self
+        obj_class = obj.class.to_s.match("Hash|Array|String") || "Object"
+        m = eval "#{obj_class}Changed::object_changed_methods obj"
+        m.each do |method|
+          eigen_class.send(:define_method, method) {
+            result = super
+            # eval "puts \"__obj_changed_hook #{method}\""
+            __obj_changed_hook
+            return result
+          }
+        end
       end
     end
   end
@@ -184,11 +212,15 @@ class YamlDoc < Hash
       if hash.instance_eval{@_}[:key_type] == Symbol; force_class = String ; conv = "to_sym" ; end
       
       hash.each do |k,v|
-        if v.class == Hash; sanitize_hashes_recursive(v) ; break; end
+        v = hash.instance_eval{extend_obj(v)}
+        # if v.class == Hash; sanitize_hashes_recursive(v) ; break; end
+        if v.class == Hash; sanitize_hashes_recursive(v) ; end
         target = eval "k.#{conv}"
-        if force_class == k.class && ! hash.include?(target) ; hash.store(target,v); end
+        if (force_class == k.class) && (! hash.include?(target))
+         hash.store(target,v);
+        end
+        hash.delete(k) if force_class == k.class
       end
-      hash.delete_if { |k,v| force_class == k.class }
     end
   end
   module EigenMethodDefiner # :nodoc:
@@ -201,16 +233,19 @@ class YamlDoc < Hash
 
       s = @_[:key_type] == Symbol ? "sym" : "str"
       eval "define_eigen_method_#{s}(#{s})"
-      
+
       if str_full.match "=$"
         obj = args.first
         obj = Hash.new if obj.nil?
         value = @_[:deep_clone] ? obj.deep_clone : obj
         eval "self[#{s}] = value"
       else
-        eval "value = self[#{s}] = self[#{s}].nil? ? Hash.new : self[#{s}]"
+        eval("value = self[#{s}] = self[#{s}].nil? ? Hash.new : self[#{s}]")
       end
 
+      return extend_obj(value)
+    end
+    def extend_obj(value)
       yaml_types = [Hash, Array, String, Object]
       yaml_types.each do |yaml_type|
         if value.is_a?(yaml_type)
@@ -224,7 +259,7 @@ class YamlDoc < Hash
           break
         end
       end
-      value
+      return value
     end
 
     def __obj_changed_hook
